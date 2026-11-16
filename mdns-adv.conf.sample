@@ -1,0 +1,8 @@
+# mDNS-SD service definitions for mdns-adv
+# Format (tab-separated name recommended when service name contains spaces):
+# <Service Name>	<Service Type>	<Domain>	<Port>	[TXT key=value ...]
+
+My NAS Server	_ssh._tcp	local	22
+My NAS Server	_device-info._tcp	local	9	model=Xserve
+My NAS Server	_smb._tcp	local	445
+

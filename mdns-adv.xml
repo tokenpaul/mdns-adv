@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+ This file and its contents are supplied under the terms of the
+ Common Development and Distribution License ("CDDL"), version 1.0.
+ You may only use this file in accordance with the terms of version
+ 1.0 of the CDDL.
+
+ A full copy of the text of the CDDL should have accompanied this
+ source.  A copy of the CDDL is also available via the Internet at
+ http://illumos.org.
+
+ Copyright 2026 token.paul
+-->
+
+<service_bundle type="manifest" name="mdns-adv">
+    <service name="network/dns/mdns-adv" type="service" version="1">
+        <create_default_instance enabled="false" />
+        <single_instance />
+
+        <!-- Require network/dns/multicast to be online first -->
+        <dependency name="multicast-dns" grouping="require_all" restart_on="restart" type="service">
+            <service_fmri value="svc:/network/dns/multicast:default" />
+        </dependency>
+
+        <!-- Require network loopback/physical to be ready -->
+        <dependency name="network" grouping="require_all" restart_on="none" type="service">
+            <service_fmri value="svc:/network/initial:default" />
+        </dependency>
+
+        <method_context>
+            <method_credential user="noaccess" group="noaccess" privileges="basic" />
+        </method_context>
+
+        <!-- Exec method explicitly targets mdns-adv utility -->
+        <exec_method type="method" name="start"
+            exec="/usr/bin/env MDNS_DEBUG=%{config/debug} /usr/bin/mdns-adv -c %{config/config} -t %{config/timer}"
+            timeout_seconds="60" />
+
+        <!-- Stopping simply terminates the associated SMF contract -->
+        <exec_method type="method" name="stop"
+            exec=":kill"
+            timeout_seconds="60" />
+
+        <property_group name="config" type="application">
+            <propval name="config" type="astring" value="/etc/mdnsd.conf" />
+            <propval name="timer" type="astring" value="0" />
+            <propval name="debug" type="astring" value="0" />
+        </property_group>
+
+        <property_group name="startd" type="framework">
+            <propval name="duration" type="astring" value="child" />
+        </property_group>
+
+        <template>
+            <common_name>
+                <loctext xml:lang="C">Tiny mDNS Service Advertiser</loctext>
+            </common_name>
+        </template>
+    </service>
+</service_bundle>
